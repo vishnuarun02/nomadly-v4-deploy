@@ -1,6 +1,55 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
+
+const MOCK_ITINERARIES = [
+  `# 3‑Day Tokyo Food & Temples
+
+**Day 1:**  
+• Arrive at Narita, check‑in in Shinjuku  
+• Afternoon stroll through Asakusa & Senso‑ji Temple  
+• Dinner at Memory Lane yakitori stalls  
+
+**Day 2:**  
+• Tsukiji Outer Market breakfast  
+• Hamarikyu Gardens boat ride  
+• Evening at Shibuya Crossing & ramen dinner  
+
+**Day 3:**  
+• Mt. Fuji day‑trip (Hakone)  
+• Relax in an onsen with Fuji views  
+• Return to Tokyo for farewell sushi dinner  
+`,
+
+  `# 4‑Day Bali Beaches & Yoga
+
+**Day 1:**  
+• Arrive in Denpasar, transfer to Uluwatu  
+• Sunset at Uluwatu Temple & Kecak dance  
+• Dinner overlooking the cliff  
+
+**Day 2:**  
+• Morning yoga class at The Practice, Uluwatu  
+• Beach time at Padang‑Padang  
+• Seafood dinner at Jimbaran Bay  
+
+**Day 3:**  
+• Day trip to Ubud: rice terraces + Monkey Forest  
+• Afternoon spa & Balinese massage  
+• Evening market and local café  
+
+**Day 4:**  
+• Sunrise yoga at Tirta Empul  
+• Brunch by rice paddies  
+• Transfer back to airport  
+`
+];
+
+function getMockItinerary() {
+  return MOCK_ITINERARIES[
+    Math.floor(Math.random() * MOCK_ITINERARIES.length)
+  ];
+}
 import Link from "next/link"
 import Image from "next/image"
 import { motion } from "framer-motion"
@@ -85,9 +134,18 @@ export default function Home() {
   const handleLlamaGenerate = async () => {
     if (!prompt.trim()) return;
 
+    // **Production** (on Vercel) → show a mock itinerary
+    if (!process.env.NEXT_PUBLIC_API_URL?.includes("localhost")) {
+      const mock = getMockItinerary();
+      setLlamaOutput(mock);
+      setTimeout(() => llamaOutputRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+      return;
+    }
+
+    // **Local** → call your real Flask API
     setIsLoading(true);
     setLoadingProgress(1);
-    setLlamaOutput("Generating itinerary...");
+    setLlamaOutput("Generating itinerary…");
 
     let progress = 1;
     const interval = setInterval(() => {
@@ -96,25 +154,24 @@ export default function Home() {
     }, 300);
 
     try {
-      const res = await fetch("/generate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ prompt }),
-        keepalive: true
-      });
-
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/generate`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt }),
+          keepalive: true,
+        }
+      );
       clearInterval(interval);
       setLoadingProgress(100);
       setIsLoading(false);
 
       const data = await res.json();
       setLlamaOutput(data.response || "No response received.");
-      setTimeout(() => {
-        llamaOutputRef.current?.scrollIntoView({ behavior: "smooth" });
-      }, 100);
-    } catch (error: unknown) {
+      setTimeout(() => llamaOutputRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+
+    } catch {
       clearInterval(interval);
       setIsLoading(false);
       setLoadingProgress(0);
