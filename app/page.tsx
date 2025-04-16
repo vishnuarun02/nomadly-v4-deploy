@@ -91,14 +91,9 @@ export default function Home() {
 
     let progress = 1;
     const interval = setInterval(() => {
-      progress += Math.floor(Math.random() * 3) + 1; // increment 1–3%
+      progress += Math.floor(Math.random() * 3) + 1;
       if (progress < 99) setLoadingProgress(progress);
-    }, 300); // update every 300ms
-
-    const controller = new AbortController();
-    const timeout = setTimeout(() => {
-      controller.abort();
-    }, 120000); // 2 min
+    }, 300);
 
     try {
       const res = await fetch("/generate", {
@@ -107,10 +102,9 @@ export default function Home() {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({ prompt }),
-        signal: controller.signal
+        keepalive: true
       });
 
-      clearTimeout(timeout);
       clearInterval(interval);
       setLoadingProgress(100);
       setIsLoading(false);
@@ -124,12 +118,7 @@ export default function Home() {
       clearInterval(interval);
       setIsLoading(false);
       setLoadingProgress(0);
-
-      if (error instanceof Error && error.name === "AbortError") {
-        setLlamaOutput("The request took too long and was aborted. Please try again.");
-      } else {
-        setLlamaOutput("Error connecting to the AI model.");
-      }
+      setLlamaOutput("Error connecting to the AI model.");
     }
   };
 
