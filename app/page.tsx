@@ -72,7 +72,7 @@ export default function Home() {
 
   const handleHealthCheck = async () => {
     try {
-      const res = await fetch("http://54.243.205.94:5000/health");
+      const res = await fetch("/health");
       const data = await res.json();
       console.log(data);
       alert("Health check response: " + JSON.stringify(data));
@@ -101,7 +101,7 @@ export default function Home() {
     }, 120000); // 2 min
 
     try {
-      const res = await fetch("http://54.243.205.94:5000/generate", {
+      const res = await fetch("/generate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -143,10 +143,10 @@ export default function Home() {
               <PlaneTakeoff className="h-6 w-6" />
               <span className="text-xl font-bold">Nomadly</span>
             </div>
-            <Button 
-              onClick={handleHealthCheck} 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              onClick={handleHealthCheck}
+              variant="ghost"
+              size="sm"
               className="text-white hover:bg-teal-600 text-xs"
             >
               Health Check

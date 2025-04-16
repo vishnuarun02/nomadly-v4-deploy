@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/generate",
+      "destination": "http://54.243.205.94:5000/generate"
+    },
+    {
+      "source": "/health",
+      "destination": "http://54.243.205.94:5000/health"
+    }
+  ]
+}
