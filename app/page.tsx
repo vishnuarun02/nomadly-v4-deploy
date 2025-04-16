@@ -24,6 +24,8 @@ export default function Home() {
   const [llamaOutput, setLlamaOutput] = useState("")
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [currentQuote, setCurrentQuote] = useState(0)
+  const [loadingProgress, setLoadingProgress] = useState(0)
+  const [isLoading, setIsLoading] = useState(false)
 
   const dropdownOutputRef = useRef<HTMLDivElement>(null)
   const llamaOutputRef = useRef<HTMLDivElement>(null)
@@ -71,7 +73,20 @@ export default function Home() {
   const handleLlamaGenerate = async () => {
     if (!prompt.trim()) return;
 
+    setIsLoading(true);
+    setLoadingProgress(1);
     setLlamaOutput("Generating itinerary...");
+
+    let progress = 1;
+    const interval = setInterval(() => {
+      progress += Math.floor(Math.random() * 3) + 1; // increment 1–3%
+      if (progress < 99) setLoadingProgress(progress);
+    }, 300); // update every 300ms
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => {
+      controller.abort();
+    }, 120000); // 2 min
 
     try {
       const res = await fetch("http://54.243.205.94:5000/generate", {
@@ -79,16 +94,30 @@ export default function Home() {
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ prompt })
+        body: JSON.stringify({ prompt }),
+        signal: controller.signal
       });
+
+      clearTimeout(timeout);
+      clearInterval(interval);
+      setLoadingProgress(100);
+      setIsLoading(false);
 
       const data = await res.json();
       setLlamaOutput(data.response || "No response received.");
       setTimeout(() => {
         llamaOutputRef.current?.scrollIntoView({ behavior: "smooth" });
       }, 100);
-    } catch (err) {
-      setLlamaOutput("Error connecting to the AI model.");
+    } catch (error: unknown) {
+      clearInterval(interval);
+      setIsLoading(false);
+      setLoadingProgress(0);
+
+      if (error instanceof Error && error.name === "AbortError") {
+        setLlamaOutput("The request took too long and was aborted. Please try again.");
+      } else {
+        setLlamaOutput("Error connecting to the AI model.");
+      }
     }
   };
 
@@ -340,6 +369,18 @@ export default function Home() {
                     </div>
                   </CardContent>
                 </Card>
+
+                {isLoading && (
+                  <div className="mt-6 w-full">
+                    <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+                      <div
+                        className="bg-teal-500 h-full transition-all duration-300 ease-in-out"
+                        style={{ width: `${loadingProgress}%` }}
+                      ></div>
+                    </div>
+                    <p className="text-sm text-teal-700 mt-1 text-center">{loadingProgress}% generating...</p>
+                  </div>
+                )}
 
                 {llamaOutput && (
                   <div ref={llamaOutputRef} className="mt-8">
