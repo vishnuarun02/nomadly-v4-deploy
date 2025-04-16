@@ -68,58 +68,29 @@ export default function Home() {
     }, 100)
   }
 
-  const handleLlamaGenerate = () => {
-    // Mock output for LLaMA model
-    setLlamaOutput(`
-      # 7-Day Tokyo & Kyoto Adventure
+  const handleLlamaGenerate = async () => {
+    if (!prompt.trim()) return;
 
-      ## Day 1: Arrive in Tokyo
-      • Morning: Arrive at Narita Airport, check into your hotel in Shinjuku
-      • Afternoon: Explore Shinjuku area, visit Tokyo Metropolitan Government Building for free views
-      • Evening: Dinner at Omoide Yokocho (Memory Lane) for authentic yakitori
+    setLlamaOutput("Generating itinerary...");
 
-      ## Day 2: Tokyo Exploration
-      • Morning: Visit Tsukiji Outer Market for breakfast, then Hamarikyu Gardens
-      • Afternoon: Explore Asakusa and Senso-ji Temple
-      • Evening: Akihabara for electronics and anime culture
+    try {
+      const res = await fetch("http://54.243.205.94:5000/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ prompt })
+      });
 
-      ## Day 3: Tokyo Day Trips
-      • Full day trip to Hakone for Mt. Fuji views, hot springs, and Lake Ashi
-      • Optional: Hakone Open Air Museum
-
-      ## Day 4: Tokyo to Kyoto
-      • Morning: Take the Shinkansen (bullet train) to Kyoto
-      • Afternoon: Check into your ryokan, visit Nishiki Market
-      • Evening: Gion district for geisha spotting and traditional atmosphere
-
-      ## Day 5: Kyoto Temples
-      • Morning: Kinkaku-ji (Golden Pavilion)
-      • Afternoon: Arashiyama Bamboo Grove and monkey park
-      • Evening: Dinner in Pontocho Alley
-
-      ## Day 6: Kyoto Cultural Day
-      • Morning: Fushimi Inari Shrine (go early to avoid crowds)
-      • Afternoon: Participate in a tea ceremony and kimono experience
-      • Evening: Kiyomizu-dera Temple for sunset views
-
-      ## Day 7: Departure
-      • Morning: Last-minute shopping at Kyoto Station
-      • Afternoon: Return to Tokyo via Shinkansen for your flight home
-
-      ## Budget Breakdown:
-      • Accommodations: ~$120/night (Tokyo), ~$150/night (Kyoto ryokan)
-      • Transportation: ~$250 (including Shinkansen)
-      • Food: ~$50-70/day
-      • Activities: ~$100-150 total
-      • Total estimated cost: $1,500-1,800 per person (excluding flights)
-
-      Enjoy your Japanese adventure!
-    `)
-
-    setTimeout(() => {
-      llamaOutputRef.current?.scrollIntoView({ behavior: "smooth" })
-    }, 100)
-  }
+      const data = await res.json();
+      setLlamaOutput(data.response || "No response received.");
+      setTimeout(() => {
+        llamaOutputRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    } catch (err) {
+      setLlamaOutput("Error connecting to the AI model.");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-teal-50 to-white">
