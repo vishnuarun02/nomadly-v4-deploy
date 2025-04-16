@@ -70,6 +70,18 @@ export default function Home() {
     }, 100)
   }
 
+  const handleHealthCheck = async () => {
+    try {
+      const res = await fetch("http://54.243.205.94:5000/health");
+      const data = await res.json();
+      console.log(data);
+      alert("Health check response: " + JSON.stringify(data));
+    } catch (error) {
+      console.error("Health check failed:", error);
+      alert("Health check failed. See console for details.");
+    }
+  };
+
   const handleLlamaGenerate = async () => {
     if (!prompt.trim()) return;
 
@@ -126,9 +138,19 @@ export default function Home() {
       {/* Navigation */}
       <nav className="sticky top-0 z-50 bg-teal-700 text-white shadow-md">
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <PlaneTakeoff className="h-6 w-6" />
-            <span className="text-xl font-bold">Nomadly</span>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <PlaneTakeoff className="h-6 w-6" />
+              <span className="text-xl font-bold">Nomadly</span>
+            </div>
+            <Button 
+              onClick={handleHealthCheck} 
+              variant="ghost" 
+              size="sm" 
+              className="text-white hover:bg-teal-600 text-xs"
+            >
+              Health Check
+            </Button>
           </div>
 
           <div className="hidden md:flex space-x-6">
